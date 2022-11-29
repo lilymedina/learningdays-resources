@@ -1,0 +1,440 @@
+---
+title: "Pruebas de hipótesis: Resumiendo información acerca de los efectos causales"
+author: "Lily Medina"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+bibliography: ../learningdays-book.bib
+biblio-style: apalike
+link-citations: yes
+colorlinks: yes
+fig_caption: yes
+header-includes: |
+   \setbeamertemplate{footline}{\begin{beamercolorbox}{section in head/foot}
+   \includegraphics[height=.5cm]{../Images/egap-logo.png} \hfill
+   \insertframenumber/\inserttotalframenumber \end{beamercolorbox}}
+   \usepackage{tikz}
+   \usepackage{tikz-cd}
+   \usepackage{textpos}
+   \usepackage{booktabs,multirow,makecell}
+output:
+  beamer_presentation: 
+    slide_level: 2
+    keep_tex: yes
+    toc: no
+    fig_caption: yes
+  revealjs::revealjs_presentation:
+    fig_caption: true
+    theme: default
+    highlight: pygments
+    center: false
+    transition: fade
+    smart: false
+    self_contained: false
+    reveal_plugins: ["notes", "search", "chalkboard"]
+    pandoc_args: [ "--toc" ]
+    reveal_options:
+      slideNumber: true
+      previewLinks: true
+      chalkboard:
+        theme: whiteboard
+        toggleNotesButton: false
+---
+
+```{r setup, include=FALSE}
+#source("rmd_setup.R")
+library(knitr)
+# Load all the libraries we need
+# library(here)
+# library(tidyverse)
+library(kableExtra)
+# library(DeclareDesign)
+# library(estimatr)
+# library(styler)
+# library(coin)
+# library(multcomp)
+# library(devtools)
+# library(randomizr)
+# library(rcompanion) ## for pairwisePermutationTest()
+```
+
+# Pruebas de hipótesis
+
+## Panorama general
+
+
+- Estamos interesados en cuáles es el efecto causal de una intervención; Entonces:
+
+1. Formulamos una hipótesis acerca de ese efecto causal. Por ejemplo: X tiene un efecto positivo sobre Y.
+2. Probamos la hipótesis
+3. Podemos decir si nuestra hipótesis puede ser o no cierta a la luz de la evidencia recolectada. 
+
+
+
+## Qué veremos en esta sesión?
+
+- Problema fundamental de la inferencia causal: para una unidad sólo podemos observar el valor que toma la variable de interés  $Y$ si esa unidad fue asignada a control o al tratamiento, pero no a los dos.
+
+- Estimación del promedio de los efecto causales 
+
+- Resultados potenciales
+
+- Valores $p$ 
+
+
+## Tres escenarios hipotéticos: 
+
+1. El mejor escenario: Podemos observar simultáneamente para cada unidad el valor de la variable de interés ($Y$) cuando estas son asignadas al grupo de control ($T=0$) y cuando son asignadas al grupo de tratamiento ($T=1$.)  
+
+2. El segundo mejor escenario: Podemos realizar un número infinito de experimentos
+
+3. El tercer mejor escenario: Podemos realizar SÓLO UN experimento
+
+# Primer escenario: podemos observar el efecto causal para cada unidad
+
+## Primer escenario: El mejor escenario
+
+Podemos observar el valor de la variable de interés ($Y$) cuando las unidades son asignadas al control ($T=0$) y cuando son asignadas a recibir el tratamiento ($T=1$.) 
+
+```{r echo=FALSE}
+
+participantes <- c("Noelia",
+             "Olivia", 
+             "Simón", 
+             "Jose", 
+             "Santiago",
+             "Alejandra",
+             "Juan",
+             "Antonio",
+             "Sofia",
+             "Emiliano")
+
+control <-     c(0,2,3,1,3,5,6,2,3,4)
+tratamiento <- c(1,2,1,4,5,5,7,4,5,6)
+
+
+RP <- data.frame(participantes, control, tratamiento)
+kable(RP, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+Preguntas:
+
+- ¿Cuál es el efecto del tratamiento para cada participante?
+- ¿Cuál es el  promedio de los efectos del tratamiento? O cómo calcularlo?
+
+
+## Efecto del tratamiento para cada participante
+
+
+```{r}
+RP$diferencia <- RP$tratamiento - RP$control 
+```
+
+```{r echo=FALSE}
+kable(RP, booktabs = T)%>%
+  kable_styling(font_size = 9)
+```
+
+
+## Promedio de los efectos del tratamiento
+
+```{r echo=FALSE, comment=""}
+kable(RP, booktabs = T)%>%
+  kable_styling(font_size = 9)
+```
+
+```{r, comment=""}
+mean(RP$diferencia)
+mean(RP$tratamiento- RP$control )
+```
+ 
+## Recapitulando
+
+- ¿Cómo definimos nuestro primer escenario? 
+
+
+
+## Recapitulando
+
+- ¿Cómo definimos nuestro primer escenario? 
+
+Como un escenario en el que podemos observar simultáneamente para cada unidad el valor de la variable de interés ($Y$) cuando estas son asignadas al grupo de control ($T=0$) y cuando son asignadas al grupo de tratamiento ($T=1$.)  
+
+
+
+## Problemas con el primer escenario
+
+- ¿Cuál es el problema con este escenario?
+
+
+## Problemas con el primer escenario
+
+- ¿Cuál es el problema con este escenario?
+
+
+Una vez conducimos nuestro experimento, sólo observamos un resultado potencial para cada unidad. Si Noelia es asignada a recibir el tratamiento, ya no podemos observar qué habría pasado si Noelia hubiera sido asignada a control y viceversa. 
+
+## Problemas con el primer escenario
+
+
+- ¿Cuál es el problema con este escenario?
+
+Una vez conducimos nuestro experimento, sólo observamos un resultado potencial para cada unidad. Si Noelia es asignada a recibir el tratamiento, ya no podemos observar qué habría pasado si Noelia hubiera sido asignada a control y viceversa. 
+
+No podemos calcular el promedio del efecto del tratamiento como vimos en la diapositiva anterior. No importa cuántos datos tengamos. Nunca vamos a poder a observar los dos resultados potenciales al mismo tiempo. 
+
+## Problemas con el primer escenario
+
+- ¿Cuál es el problema con este escenario?
+
+Una vez conducimos nuestro experimento, sólo observamos un resultado potencial para cada unidad. Si Noelia es asignada a recibir el tratamiento, ya no podemos observar qué habría pasado si Noelia hubiera sido asignada a control y viceversa. 
+
+No podemos calcular el promedio del efecto del tratamiento como vimos en la diapositiva anterior. No importa cuántos datos tengamos. Nunca vamos a poder a observar los dos resultados potenciales al mismo tiempo. 
+
+Esto es a lo que llamamos  **el problema fundamental de la inferencia causal.** 
+
+# Segundo escenario: podemos realizar un número infinito de experimentos
+
+## ¿Cuál es la situación ahora?
+
+- No podemos observar el efecto causal para cada unidad
+- Intuición: recibes el tratamiento (ejemplo: un medicamento) o no lo recibes. Pero las dos cosas no pasan al mismo tiempo
+- Esto es a lo que llamamos  **el problema fundamental de la inferencia causal.**
+- No observamos los valores contrafactuales
+- Hay muchos datos faltantes
+
+## ¿Cómo podemos solucionarlo?
+
+- Aunque nunca podremos observar el efecto causal para cada unidad. Sí podemos calcular el promedio de los valores que sí observamos. 
+
+- Gracias al selección/asignación aleatoria podemos  obtener  estimaciones confiables.
+
+## Veámos lo que nos permite el selección/asignación aleatoria
+
+Enfoquémonos por ahora en el promedio del resultado potencial bajo el tratamiento
+
+```{r echo=FALSE}
+RP <- data.frame(participantes, control, tratamiento)
+kable(RP, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+```{r, comment=""}
+mean(RP$tratamiento)
+```
+
+## Pregunta
+
+
+¿Podemos obtener  una  estimación confiable de este promedio si no observamos el resultado potencial bajo el tratamiento para cada participante?
+
+## Por ejemplo
+
+¿Qué pasa si hacemos solo seleccionamos 5 unidades aleatoriamente para el grupo del tratamiento?
+
+```{r echo=FALSE}
+ 
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, "")
+seleccionado  <- ifelse(asignacion==1, "si", "no")
+
+muestra <- data.frame(participantes,  tratamiento = tr , 
+                 seleccion = seleccionado)
+
+
+kable(muestra, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+```{r include=FALSE}
+muestra$tratamiento <- as.numeric(muestra$tratamiento)
+```
+
+```{r comment=""}
+mean(muestra$tratamiento, na.rm = TRUE)
+```
+
+
+
+## ¿Qué pasa si hacemos esa misma selección aleatoria una vez más?
+
+```{r echo=FALSE}
+ 
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, "")
+seleccionado  <- ifelse(asignacion==1, "si", "no")
+
+muestra <- data.frame(participantes,  tratamiento = tr , 
+                 seleccion = seleccionado)
+
+
+kable(muestra, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+```{r include=FALSE}
+muestra$tratamiento <- as.numeric(muestra$tratamiento)
+```
+
+```{r comment=""}
+mean(muestra$tratamiento, na.rm = TRUE)
+```
+
+
+
+## ¿Qué pasa si hacemos esto **muchas** veces?
+
+
+```{r echo= FALSE}
+library(ggplot2)
+promedios <- c()
+for (i in 1:10000) {
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, NA)
+
+muestra <- data.frame(participantes,  tratamiento = tr )
+
+promedios <- append(promedios, mean(muestra$tratamiento,na.rm = TRUE))
+}
+
+
+
+simulaciones <- data.frame(id = 1:10000, promedios )
+
+
+ggplot(simulaciones , aes(x=promedios )) +
+  geom_histogram(fill= 'light blue', bins = 20) +
+  geom_vline(aes(xintercept= mean(RP$tratamiento))) +
+  xlab("Promedio de las simulaciones") +
+  ylab("Conteo de los promedios") + 
+  ggtitle("Distribucion de los promedios del tratamiento de 10000 simulaciones")
+```
+
+
+## Ahora comparemos el promedio de las simulaciones con el real
+
+### Simulaciones
+```{r}
+mean(promedios)
+```
+
+### Promedio "real"
+```{r}
+mean(RP$tratamiento)
+```
+
+## Panorama general
+
+### ¿Qué hemos aprendido?
+
+- Que podemos estimar el promedio real de una cantidad sin tener todos las observaciones.
+
+### ¿Para qué nos sirve este aprendizaje?
+
+- Vamos a utilizar esta misma idea para estimar el efecto causal promedio
+
+
+## Asignación aleatoria
+
+- Supongamos que queremos probar si el tratamiento tuvo algún efecto positivo entre los participantes
+
+```{r, echo=FALSE}
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, "")
+ctr  <- ifelse(asignacion==0, control, "")
+
+aa1 <- data.frame(participantes,  tratamiento = tr ,control = ctr,
+                  asignacion)
+
+
+kable(aa1, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+Si `asignacion = 1`, el participante fue asignado al grupo del tratamiento y si `asignacion = 0`, el participante fue asignado al grupo de control.
+
+
+## Efecto causal promedio para este esquema de asignación
+
+```{r echo = FALSE }
+kable(aa1, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+```{r include=FALSE}
+aa1$tratamiento <- as.numeric(aa1$tratamiento)
+aa1$control <- as.numeric(aa1$control )
+```
+
+```{r}
+mean(aa1$tratamiento, na.rm = TRUE)-mean(aa1$control, na.rm = TRUE)
+```
+
+## Estimemos el efecto causal promedio para otra asignación
+```{r, echo=FALSE}
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, "")
+ctr  <- ifelse(asignacion==0, control, "")
+
+aa2 <- data.frame(participantes,  tratamiento = tr ,control = ctr,
+                  asignacion)
+
+
+kable(aa1, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+```{r echo = FALSE }
+kable(aa1, booktabs = T)%>%
+  kable_styling(font_size = 7)
+```
+
+```{r include=FALSE}
+aa1$tratamiento <- as.numeric(aa1$tratamiento)
+aa1$control <- as.numeric(aa1$control )
+```
+
+```{r}
+mean(aa1$tratamiento, na.rm = TRUE)-mean(aa1$control, na.rm = TRUE)
+```
+
+##  y ahora para *muchas*
+
+- Repetimos este proceso 10000 veces
+
+- En cada iteración la mitad de los participantes son asignados aleatoriamente al grupo de control y la mitad al grupo del tratamiento
+
+- Calculamos el promedio de cada grupo y luego calculamos la diferencia del promedio. Ese es el **efecto causal promedio**
+
+```{r}
+ecp<- c()
+for (i in 1:10000) {
+asignacion <-  randomizr::complete_ra(10, 5 )
+tr  <- ifelse(asignacion==1, tratamiento, NA)
+ctr  <- ifelse(asignacion==0, control, NA)
+aa2 <- data.frame(participantes,  tratamiento = tr ,control = ctr,
+                  asignacion)
+ATE <- mean(aa2$tratamiento,na.rm = TRUE) -mean(aa2$control,na.rm = TRUE)
+
+ecp <- append(ecp, ATE)
+}
+
+
+
+simulaciones <- data.frame(id = 1:10000, ecp )
+
+
+ggplot(simulaciones , aes(x=ecp )) +
+  geom_histogram(fill= 'light blue', bins = 20) +
+  geom_vline(aes(xintercept= mean(RP$tratamiento-RP$control))) +
+  xlab("Efecto causal promedio") +
+  ylab("Conteo de los promedios") + 
+  ggtitle("Distribucion del efecto causal promedio de las 10000 simulaciones")
+```
+
+## Ahora comparemos el promedio de las simulaciones con el real
+
+Simulaciones
+```{r}
+mean(ecp)
+```
+
+Real
